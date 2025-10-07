@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Form</title>
+</head>
+<body>
+    <h2>User Registration</h2>
+    
+    <form method="post" enctype="multipart/form-data">
+        <input type="text" name="username" placeholder="Enter Your Name">
+        <br><br>
+        
+        <input type="email" name="email" placeholder="Enter Your Email">
+        <br><br>
+        
+        <input type="password" name="password" placeholder="Enter Your Password">
+        <br><br>
+        
+        <input type="file" name="image">
+        <br><br>
+        
+        <button type="submit" name="submit">Send</button>
+    </form>
+
+    <?php
+    if (isset($_POST['submit'])) {
+        // Process the image upload
+        $tmp_name = $_FILES['image']['tmp_name'];
+        $image_name = $_FILES['image']['name'];
+        
+        // Create folder if it doesn't exist
+        if (!file_exists('myImage')) {
+            mkdir('myImage', 0777, true);
+        }
+        
+        // Store in folder and show image
+        if (move_uploaded_file($tmp_name, "myImage/$image_name")) {
+            echo "Success";
+            echo "<br>";
+            echo "<img src='myImage/$image_name' width='300'>";
+        } else {
+            echo "Error";
+        }
+    }
+    ?>
+</body>
+</html>
