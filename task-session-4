@@ -1,0 +1,32 @@
+<form action="process.php" method="POST">
+    <input type="number" name="num1" >
+    <input type="number" name="num2">
+    <button type="submit">Add Numbers</button>
+</form>
+<?php
+
+<?php
+
+// 1. Define the function with the new name
+function calculateSum($a, $b) {
+    return $a + $b;
+}
+
+if (isset($_POST['num1'], $_POST['num2'])) {
+    
+    //Receive two numbers
+    $num1 = (float) $_POST['num1']; 
+    $num2 = (float) $_POST['num2'];
+    
+    //Call the function
+    $result = calculateSum($num1, $num2);
+    
+    //Display the result
+    echo "<h1>Display the Result</h1>";
+    echo "<p>The sum of *" . $num1 . "* and *" . $num2 . "* is: *" . $result . "*</p>";
+
+} else {
+    echo "ERROR";
+}
+
+?>
