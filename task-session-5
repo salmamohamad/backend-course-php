@@ -7,7 +7,7 @@
 
 <?php
 
-// 1. Define the function with the new name
+//Define the function 
 function calculateSum($a, $b) {
     return $a + $b;
 }
