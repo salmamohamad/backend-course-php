@@ -1,0 +1,216 @@
+----- CREATING TABLES -----
+-- 1. I WILL CREATE TABLE CALLED USER
+CREATE TABLE User(
+    User_ID INT PRIMARY KEY AUTO_INCREMENT,
+    Username VARCHAR(50) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    Image VARCHAR(255)
+);
+
+-- 2. I WILL CREATE TABLE CALLED CATEGORY 
+CREATE TABLE Category (
+    ID INT PRIMARY KEY AUTO_INCREMENT,
+    Category_Name VARCHAR(100) NOT NULL UNIQUE
+);
+-- 3.AND TABLE CALLED CORPORATE
+CREATE TABLE Corporate (
+    ID INT PRIMARY KEY AUTO_INCREMENT,
+    Company_name VARCHAR(100) NOT NULL UNIQUE,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    phone VARCHAR(20),
+    Tax_register VARCHAR(50) UNIQUE,
+    Address VARCHAR(255),
+    City VARCHAR(50),
+    Image VARCHAR(255),
+    Commercial_Record VARCHAR(255)
+);
+-- 4.TABLE CALLED JOB
+CREATE TABLE Job (
+    Job_ID INT PRIMARY KEY AUTO_INCREMENT,
+    Job_Location VARCHAR(100),
+    Job_Description TEXT NOT NULL,
+    Job_Requirement TEXT,
+    range_Salary VARCHAR(100),
+    Country VARCHAR(50),
+    Job_Questions TEXT,
+    Job_Level ENUM('Junior', 'Mid-level', 'Senior'),
+    Job_Type ENUM('Fulltime', 'Part-time', 'Freelance', 'remotely', 'hybrid'),
+    Image VARCHAR(255),
+    Department VARCHAR(100),
+    Corporate_ID INT,
+    Category_ID INT,
+   
+    FOREIGN KEY (Corporate_ID) REFERENCES Corporate(ID),
+    FOREIGN KEY (Category_ID) REFERENCES Category(ID)
+);
+
+-- 5.I WILL MAKE TABLE CALLLED SKILLS WHERE IT WILL BE AN INTERMEDIATE TABLE FOR A MULTIPLE TP MULTIPLE REALATIONSHIP WITH JOB
+CREATE TABLE Skills (
+    Job_ID INT,
+    Skill_Name VARCHAR(100),
+    PRIMARY KEY (Job_ID, Skill_Name),
+    FOREIGN KEY (Job_ID) REFERENCES Job(Job_ID)
+);
+-- 6. TABLE CALLED APPLICATION
+CREATE TABLE Application (
+    ID INT PRIMARY KEY AUTO_INCREMENT,
+    User_ID INT,
+    Job_ID INT,
+    Application_date DATE NOT NULL,
+    Years_of_experience INT,
+    Notice_period VARCHAR(50),
+    Cover_letters TEXT,
+    CV VARCHAR(255), 
+    Candidate_profile_link VARCHAR(255),
+    Attachments JSON, 
+    
+    FOREIGN KEY (User_ID) REFERENCES User(User_ID),
+    FOREIGN KEY (Job_ID) REFERENCES Job(Job_ID)
+);
+
+-- 7.  CREATE TABLE CALLED REVIEW
+CREATE TABLE Reviews (
+    Reviews_ID INT PRIMARY KEY AUTO_INCREMENT,
+    Application_ID INT,
+    Applicant_ID INT,
+    Status ENUM('Pending', 'Accepted', 'Rejected'),
+    Notes TEXT,
+    
+    FOREIGN KEY (Application_ID) REFERENCES Application(ID)
+);
+
+-- 8. CREATE TABLE CALLED INTERVIEW
+CREATE TABLE Interview (
+    ID INT PRIMARY KEY AUTO_INCREMENT,
+    User_ID INT,
+    Reviews_ID INT,
+    Date DATE NOT NULL,
+    Time TIME NOT NULL,
+    Location VARCHAR(255),
+    Status ENUM('Scheduled', 'Completed', 'Cancelled'),
+    comments TEXT,
+    Interview_mail VARCHAR(255),
+    
+    FOREIGN KEY (User_ID) REFERENCES User(User_ID),
+    FOREIGN KEY (Reviews_ID) REFERENCES Reviews(Reviews_ID)
+);
+
+-- 9. CREATE TABLE CALLED FinalInterviewStatus
+CREATE TABLE FinalInterviewStatus (
+    Interview_ID INT PRIMARY KEY,
+    Applicant_ID INT,
+    FinalStatus ENUM('Hired', 'Not Hired', 'On Hold'),
+    Status TEXT, 
+    
+    FOREIGN KEY (Interview_ID) REFERENCES Interview(ID),
+    FOREIGN KEY (Applicant_ID) REFERENCES User(User_ID)
+);
+------- INSERT INTO  --------
+-- 1. (Category)
+INSERT INTO Category (Category_Name) VALUES 
+('Healthcare & Pharma'),
+('Construction & Engineering'),
+('Education & Training');
+
+-- 2. (User)
+INSERT INTO User (Username, password, Image) VALUES 
+('sohaila_Hassan', 'pass_sohaila2023', 'sohaila_pfp.jpg'),
+('Tariq_Zaki', 'tariq_sec_pass', 'tariq_photo.png'),
+('Sara_Fouad', 'mona_123', NULL);
+
+-- 3.(Corporate)
+INSERT INTO Corporate (Company_name, email, password, phone) VALUES 
+('KIDZANIA', 'KID@ZANIA.com', 'KID_ZANIA_2000', '01225544331'),
+('OXYGEN Pharma', 'careers@oxygenpharma.com', 'pharma_pass_o', '01009988776'),
+('Future Skills Academy', 'admin@skillsfuture.net', 'academy_sec', '01117766554');
+-- 4.(Job)
+
+INSERT INTO Job (
+    Corporate_ID, Category_ID, Job_Location, Job_Description, Job_Requirement, 
+    range_Salary, Job_Level, Job_Type, Country, Department
+) 
+VALUES 
+(
+    1, -- KIDZANIA
+    3, -- Education & Training
+    'On-site',
+    'We need a fun and engaging trainer for children activities.',
+    'Experience working with children; Excellent communication skills.',
+    '8000 - 12000 EGP',
+    'Junior',
+    'Fulltime',
+    'Egypt',
+    'Training'
+),
+(
+    2, -- OXYGEN Pharma
+    1, -- Healthcare & Pharma
+    'On-site',
+    'Required a Quality Control Specialist for pharmaceutical factory.',
+    'Pharmacy degree; Licensed; 2+ years QC experience.',
+    '15000 - 22000 EGP',
+    'Mid-level',
+    'Fulltime',
+    'Egypt',
+    'Quality Control'
+),
+(
+    3, -- Future Skills Academy
+    3, -- Education & Training
+    'Remote',
+    'Online instructor needed for Python programming courses.',
+    '4+ years teaching experience; Expert in Python/Django.',
+    '18000 - 30000 EGP',
+    'Senior',
+    'Part-time',
+    'Egypt',
+    'Online Learning'
+);
+-- 5.(Application)
+-- (نفترض Application_ID: 1)
+INSERT INTO Application (
+    User_ID, Job_ID, Application_date, Years_of_experience, CV
+) 
+VALUES (
+    1, -- Layla_Hassan
+    1, --  KIDZANIA
+    CURDATE(),
+    1, 
+    'sohaila_hassan_cv.pdf'
+);
+
+-- 6.(Review)
+INSERT INTO Reviews (
+    Application_ID, Applicant_ID, Status, Notes
+) 
+VALUES (
+    1, -- Application_ID
+    1, -- Layla_Hassan
+    'Accepted', 
+    'Proceed to interview.'
+);
+
+-- 7.(Interview)
+INSERT INTO Interview (
+    User_ID, Reviews_ID, Date, Time, Location, Status, Interview_mail
+) 
+VALUES (
+    1, -- Layla_Hassan
+    1, -- Reviews_ID
+    '2025-11-15', 
+    '10:00:00', 
+    'Office Meeting Room A',
+    'Scheduled',
+    'Interview details sent.'
+);
+
+-- 8.(FinalInterviewStatus)
+INSERT INTO FinalInterviewStatus (
+    Interview_ID, Applicant_ID, FinalStatus, Status
+) 
+VALUES (
+    1, -- Interview_ID
+    1, -- sohaila_Hassan
+    'Hired',
+    'Excellent cultural fit and technical skills.
