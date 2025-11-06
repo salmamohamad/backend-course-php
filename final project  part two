@@ -3,7 +3,7 @@
 $host = "localhost";
 $username = "root";
 $password = "";     
-$db_name = "job_management_system";
+$db_name = "job management system";
 
 try{
 $connection = new mysqli($host, $username, $password, $db_name);
