@@ -1,0 +1,246 @@
+----------job_add.php -------------
+<?php
+include 'db_connect.php'; 
+
+$db = $connection;
+
+
+$categories_result = $db->query("SELECT ID, Category_Name FROM category");
+
+if ($categories_result === false) {
+    die("Error fetching categories: " . $db->error);
+}
+
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    
+    
+    $job_description = $db->real_escape_string($_POST['job_description']);
+    $job_requirement = $db->real_escape_string($_POST['job_requirement']);
+    $range_salary = $db->real_escape_string($_POST['range_salary']);
+    $country = $db->real_escape_string($_POST['country']);
+    $category_id = intval($_POST['category_id']); 
+    $job_level = $db->real_escape_string($_POST['job_level']);
+    $job_location = $db->real_escape_string($_POST['job_location']);
+
+    
+    $sql_insert = "INSERT INTO job (Job_Description, Job_Requirement, range_Salary, Country, Category_ID, Job_Level, Job_Location) 
+                   VALUES ('$job_description', '$job_requirement', '$range_salary', '$country', $category_id, '$job_level', '$job_location')";
+
+    if ($db->query($sql_insert) === TRUE) {
+        
+        header("Location: job_index.php");
+        exit();
+    } else {
+        $error_message = "Error creating job: " . $db->error;
+    }
+}
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add New Job</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h2 class="mb-4 text-success">Add New Job Posting</h2>
+        
+        <?php if (!empty($error_message)): ?>
+            <div class="alert alert-danger"><?php echo $error_message; ?></div>
+        <?php endif; ?>
+
+        <form method="POST">
+            
+            <div class="mb-3">
+                <label for="job_description" class="form-label">Job Description</label>
+                <textarea class="form-control" id="job_description" name="job_description" rows="3" required></textarea>
+            </div>
+
+        
+            <div class="mb-3">
+                <label for="job_requirement" class="form-label">Job Requirements</label>
+                <textarea class="form-control" id="job_requirement" name="job_requirement" rows="3" required></textarea>
+            </div>
+
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="range_salary" class="form-label">Salary Range</label>
+                    <input type="text" class="form-control" id="range_salary" name="range_salary" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="country" class="form-label">Country</label>
+                    <input type="text" class="form-control" id="country" name="country" required>
+                </div>
+            </div>
+
+            
+            <div class="mb-3">
+                <label for="category_id" class="form-label">Category</label>
+                <select class="form-select" id="category_id" name="category_id" required>
+                    <option value="">Select Category</option>
+                    <?php 
+                    while ($category = $categories_result->fetch_assoc()) {
+                        
+                        echo "<option value='" . htmlspecialchars($category["ID"]) . "'>" . htmlspecialchars($category["Category_Name"]) . "</option>";
+                    }
+                    ?>
+                </select>
+            </div>
+            
+            
+            <div class="mb-3">
+                <label for="job_level" class="form-label">Job Level</label>
+                <select class="form-select" id="job_level" name="job_level" required>
+                    <option value="">Select Level</option>
+                    <option value="Junior">Junior</option>
+                    <option value="Mid-level">Mid-level</option>
+                    <option value="Senior">Senior</option>
+                </select>
+            </div>
+            
+            
+            <div class="mb-3">
+                <label for="job_location" class="form-label">Job Location Type</label>
+                <select class="form-select" id="job_location" name="job_location" required>
+                    <option value="">Select Location Type</option>
+                    <option value="On-site">On-site</option>
+                    <option value="Remote">Remote</option>
+                    <option value="Hybrid">Hybrid</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-success">Save Job Post</button>
+            <a href="job_index.php" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+------------------ job_index.php ------------------------
+<?php
+include 'db_connect.php'; 
+
+$sql = "SELECT j.*, c.Company_Name, cat.Category_Name 
+        FROM job j 
+        JOIN corporate c ON j.Corporate_ID = c.id 
+        LEFT JOIN category cat ON j.Category_ID = cat.ID 
+        ORDER BY j.Job_ID DESC"; 
+$result = $connection->query($sql);
+
+
+if (!$result) {
+    die("SQL Error: " . $connection->error);
+}
+?>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Job Postings</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f4f4f9;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        a.button {
+            display: inline-block;
+            padding: 10px 15px;
+            margin-bottom: 20px;
+            background-color: #28a745;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        a.button:hover {
+            background-color: #1e7e34;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        td a {
+            margin-right: 10px;
+            color: #007bff;
+            text-decoration: none;
+        }
+        td a:hover {
+            text-decoration: underline;
+        }
+        .actions {
+            white-space: nowrap; 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Job Postings List</h2>
+        <a href="job_add.php" class="button">Add New Job</a>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Company</th>
+                    <th>Category</th>
+                    <th>Location</th>
+                    <th>Level</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if ($result && $result->num_rows > 0): ?>
+                    <?php while($row = $result->fetch_assoc()): ?>
+                        <tr>
+                            <td><?= htmlspecialchars($row['Job_ID']) ?></td>
+                            <td><?= htmlspecialchars($row['Company_Name']) ?></td>
+                            <td><?= htmlspecialchars($row['Category_Name']) ?></td>
+                            <td><?= htmlspecialchars($row['Job_Location']) ?></td>
+                            <td><?= htmlspecialchars($row['Job_Level']) ?></td>
+                            <td class="actions">
+                                <a href='job_edit.php?id=<?= htmlspecialchars($row['Job_ID']) ?>'>Edit</a> | 
+                                
+                                <a href='job_delete.php?id=<?= htmlspecialchars($row['Job_ID']) ?>' 
+                                   onclick="console.log('Delete action clicked for ID: ' + <?= $row['Job_ID'] ?>)">Delete</a>
+                            </td>
+                        </tr>
+                    <?php endwhile; ?>
+                <?php else: ?>
+                    <tr><td colspan='6'>No job postings found.</td></tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
