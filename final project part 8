@@ -1,0 +1,52 @@
+-------------- user_add.php -------------------
+<?php
+include 'db_connect.php'; 
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+
+    $username = sanitize($_POST['username']);
+    $email = sanitize($_POST['email']); 
+    $role = sanitize($_POST['role']); 
+    $password_text = $_POST['password']; 
+
+    
+    $hashed_password = password_hash($password_text, PASSWORD_DEFAULT);
+
+    //insert into database
+    $stmt = $connection->prepare("INSERT INTO user (Username, password, email, role) VALUES (?, ?, ?, ?)");
+    
+    $stmt->bind_param("ssss", $username, $hashed_password, $email, $role);
+
+    if ($stmt->execute()) {
+        header("Location: user_index.php");
+        exit();
+    } else {
+        $error = "Error: " . $stmt->error;
+    }
+    $stmt->close();
+}
+?>
+
+<!DOCTYPE html>
+<html>
+<body>
+    <h2>Add New User</h2>
+    <form method="post">
+        <label>Username:</label>
+        <input type="text" name="username" required><br><br>
+        <label>Email:</label>
+        <input type="email" name="email"><br><br>
+        <label>Password:</label>
+        <input type="password" name="password" required><br><br>
+        <label>Role:</label>
+        <select name="role" required>
+            <option value="candidate">Candidate</option>
+            <option value="corporate">Corporate</option>
+            <option value="admin">Admin</option>
+        </select><br><br>
+        <button type="submit">Add User</button>
+        <a href="user_index.php">Back to List</a>
+    </form>
+</body>
+</html>
+-------------- user_index.php ----------------------
