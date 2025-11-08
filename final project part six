@@ -1,0 +1,178 @@
+----------- interview_add.php --------------------------
+<?php
+include 'db_connect.php'; 
+
+$jobs_result = $connection->query("SELECT Job_ID, Job_Description FROM job");
+
+ 
+$users_result = $connection->query("SELECT User_ID, Username FROM user");
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $user_id = sanitize($_POST['user_id']); 
+    $reviews_id = sanitize($_POST['reviews_id']); 
+    $job_id = sanitize($_POST['job_id']); 
+    $interview_date = sanitize($_POST['interview_date']);
+    $interview_time = sanitize($_POST['interview_time']);
+    $location = sanitize($_POST['location']);
+    $status = 'Scheduled'; // Default status
+
+
+    $stmt = $connection->prepare("INSERT INTO interview (Job_ID, User_ID, Reviews_ID, Date, Time, Location, Status) VALUES (?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("iiissss", $job_id, $user_id, $reviews_id, $interview_date, $interview_time, $location, $status); 
+
+    if ($stmt->execute()) {
+        header("Location: interview_index.php");
+        exit();
+    } else {
+        $error = "Error: " . $stmt->error;
+    }
+    $stmt->close();
+}
+?>
+
+<!DOCTYPE html>
+<html>
+<body>
+    <h2>Schedule New Interview</h2>
+    <form method="post">
+        
+        <label>Job:</label>
+        <select name="job_id" required>
+            <?php while($row = $jobs_result->fetch_assoc()) {
+                echo "<option value='{$row['Job_ID']}'>" . substr($row['Job_Description'], 0, 40) . "...</option>";
+            } ?>
+        </select><br><br>
+
+        <label>Candidate (User_ID):</label>
+        <select name="user_id" required>
+            <?php $users_result->data_seek(0); 
+             while($row = $users_result->fetch_assoc()) {
+                echo "<option value='{$row['User_ID']}'>{$row['Username']}</option>";
+            } ?>
+        </select><br><br>
+        
+        <label>Reviewer (Reviews_ID):</label>
+        <select name="reviews_id" required>
+            <?php $users_result->data_seek(0); 
+            while($row = $users_result->fetch_assoc()) {
+                echo "<option value='{$row['User_ID']}'>{$row['Username']}</option>";
+            } ?>
+        </select><br><br>
+
+        <label>Date:</label><input type="date" name="interview_date" required><br><br>
+        <label>Time:</label><input type="time" name="interview_time" required><br><br>
+        <label>Location:</label><input type="text" name="location" required><br><br>
+
+        <button type="submit">Schedule Interview</button>
+    </form>
+</body>
+</html>
+
+----------------------interview_index.php ---------------------------
+<?php
+include 'db_connect.php'; 
+
+$db = $connection; 
+
+$sql = "SELECT 
+    i.ID, 
+    i.Date, 
+    i.Time, 
+    i.Location, 
+    i.Status,
+    j.Job_Description,
+    c.Username AS Candidate_Name, 
+    r.Username AS Reviewer_Name
+FROM interview i
+    
+
+    LEFT JOIN user c ON i.User_ID = c.user_id
+    
+    
+    LEFT JOIN user r ON i.Reviews_ID = r.user_id 
+    
+    LEFT JOIN job j ON i.Job_ID = j.Job_ID
+ORDER BY i.Date DESC, i.Time DESC"; 
+
+$result = $db->query($sql);
+
+
+if ($result === false) {
+    
+    
+    die("Error executing query: " . $db->error . "<br>
+        <p>Please check your database structure. The column for joining the 'user' table 
+        is likely not 'id'. Try checking if it should be **'user_id'** or **'ID'** (all caps) in the **user** table.</p>");
+}
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scheduled Interviews</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .container { max-width: 1200px; }
+        .table-responsive { overflow-x: auto; }
+        
+        body { background-color: #f8f9fa; }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h2 class="mb-4 text-primary">Scheduled Interviews</h2>
+        
+        <a href="interview_add.php" class="btn btn-success mb-3">Schedule New Interview</a>
+        
+        <div class="table-responsive">
+            <table class="table table-hover table-striped table-bordered align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Position</th> 
+                        <th>Candidate</th>
+                        <th>Reviewer</th>
+                        <th>Location</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    if ($result->num_rows > 0) {
+                        while($row = $result->fetch_assoc()) {
+                            echo "<tr>";
+                            echo "<td>" . htmlspecialchars($row["ID"]) . "</td>";
+                            echo "<td>" . htmlspecialchars($row["Date"]) . "</td>";
+                            echo "<td>" . htmlspecialchars($row["Time"]) . "</td>";
+                            
+                            echo "<td>" . htmlspecialchars($row["Job_Description"] ?? 'N/A') . "</td>"; 
+                            echo "<td>" . htmlspecialchars($row["Candidate_Name"] ?? 'Unknown') . "</td>";
+                            echo "<td>" . htmlspecialchars($row["Reviewer_Name"] ?? 'Unknown') . "</td>";
+                            echo "<td>" . htmlspecialchars($row["Location"]) . "</td>";
+                            echo "<td>" . htmlspecialchars($row["Status"]) . "</td>";
+                            echo "<td>
+                                <a href='interview_edit.php?id=" . htmlspecialchars($row["ID"]) . "' class='btn btn-sm btn-primary me-2'>Edit</a> 
+                                <a href='interview_delete.php?id=" . htmlspecialchars($row["ID"]) . "' class='btn btn-sm btn-danger' onclick=\"return confirm('Are you sure you want to delete this interview?');\">Delete</a>
+                            </td>";
+                            echo "</tr>";
+                        }
+                    } else {
+                        echo "<tr><td colspan='9' class='text-center'>No interviews scheduled.</td></tr>";
+                    }
+                    ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+<?php
+
+$db->close();
+?>
